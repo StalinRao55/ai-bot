@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 app = FastAPI(title="Enterprise AI Agent")
 
@@ -11,12 +13,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve frontend
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+@app.get("/")
+def serve_ui():
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 @app.post("/chat")
 async def chat(data: dict):
     message = data.get("message", "")
-    return {
-        "reply": f"AI received your message: {message}"
-    }
+    return {"reply": f"AI received: {message}"}
